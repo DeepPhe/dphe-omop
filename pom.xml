@@ -26,6 +26,12 @@
             <version>0.7.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.healthnlp</groupId>
+            <artifactId>deepphe-onto-db2</artifactId>
+            <version>0.7.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -68,34 +74,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-dependency-plugin</artifactId>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>resource-dependencies</id>-->
-<!--                        <phase>compile</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>unpack</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <artifactItems>-->
-<!--                                <artifactItem>-->
-<!--                                    <groupId>org.healthnlp</groupId>-->
-<!--                                    <artifactId>deepphe-onto-db</artifactId>-->
-<!--                                    <version>${project.version}</version>-->
-<!--                                    <type>jar</type>-->
-<!--                                    <overWrite>true</overWrite>-->
-<!--                                    <outputDirectory>${project.basedir}/resources</outputDirectory>-->
-<!--                                </artifactItem>-->
-<!--                            </artifactItems>-->
-<!--                            <includes>graph/**</includes>-->
-<!--                            <outputDirectory>${project.basedir}/resources</outputDirectory>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
 
         </plugins>
     </build>
