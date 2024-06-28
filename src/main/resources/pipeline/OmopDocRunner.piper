@@ -18,13 +18,17 @@ package org.healthnlp.deepphe.nlp.ae.relation
 package org.healthnlp.deepphe.nlp.ae.section
 package org.healthnlp.deepphe.nlp.writer
 package org.healthnlp.deepphe.nlp.util
+package org.healthnlp.deepphe.omop.writer
 
-// New settings for cased ner.
+// New settings for cased ner.  Name of Dictionary (and Detailer).
+// There can be more than 1, each of which should have additional settings with extensions.  e.g. _type, _url
 set Dictionaries=deepphe_2023_v1
 set Detailers=deepphe_2023_v1
+
+// The type of store used for Dictionary (and Detailer) deepphe_20023_v1
 set deepphe_2023_v1_type=JDBC
 
-// Path to the dictionary database in the uber-jar
+// Path to the dictionary database in the uber-jar for Dictionary (and Detailer) deepphe_2023_v1
 set deepphe_2023_v1_url=jdbc:hsqldb:file:hsqldb/DeepPhe_2023_v1/DeepPhe_2023_v1
 
 // Path to the graph database in the uber-jar
