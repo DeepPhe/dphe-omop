@@ -3,7 +3,6 @@ package org.healthnlp.deepphe.omop;
 import org.apache.ctakes.core.pipeline.PiperFileRunner;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -18,7 +17,7 @@ final public class DpheOmopDocRunner {
    static private final String DEFAULT_PIPER = "pipeline/OmopDocRunner.piper";
 
    public static void main( final String... args ) {
-//      final List<String> parms = Arrays.asList( args );
+      // Create modifiable list of args.  List.of creates an UnmodifiableList, so wrap it.
       final List<String> parms = new ArrayList<>( List.of( args ) );
       // Add the default piper file if one is not specified.
       if ( !parms.contains( "-p" ) ) {
