@@ -73,7 +73,7 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
 
 
    private static class MentionInfoHolder {
-      static private final int WINDOW_EDGE = 10;
+      static private final int WINDOW_EDGE = 40;
       private final DpheGroup _dpheGroup;
       private final String _uri;
       private final String _cui;
@@ -95,8 +95,11 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
          _negated =  IdentifiedAnnotationUtil.isNegated( annotation ) ? "True" : "False";
          _uncertain = IdentifiedAnnotationUtil.isUncertain( annotation ) ? "True" : "False";
          _historic = IdentifiedAnnotationUtil.isHistoric( annotation ) ? "True" : "False";
-         _prefText = IdentifiedAnnotationUtil.getPreferredTexts( annotation ).stream().findFirst().orElse( "" );
-         _text = annotation.getCoveredText();
+         // Replace newlines and carriage returns with spaces to keep the CSV rows clean
+         _prefText = IdentifiedAnnotationUtil.getPreferredTexts( annotation ).stream().findFirst().orElse( "" )
+           .replace('\n', ' ').replace('\r', ' ').replace('|', ' ');
+        _text = annotation.getCoveredText().replace('\n', ' ').replace('\r', ' ')
+          .replace('|', ' ');
          try {
             //////////////////////////////////////////////////////////////
             //   This is kind of strange, but you must use getView() on an annotation, not getCAS().
@@ -105,9 +108,12 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
 //                final JCas annotationCas = annotation.getCAS().getJCas();
             final JCas annotationCas = annotation.getView().getJCas();
             final String docText = annotationCas.getDocumentText();
-            _textWindow = docText.substring(
+            _textWindow = docText
+              .substring(
                   Math.max( 0, annotation.getBegin()-WINDOW_EDGE ),
-                  Math.min( docText.length(), annotation.getEnd() + WINDOW_EDGE ) );
+                  Math.min( docText.length(), annotation.getEnd() + WINDOW_EDGE ) )
+              // Replace newlines and carriage returns with spaces to keep the CSV rows clean
+              .replace('\n', ' ').replace('\r', ' ').replace('|', ' ');
          } catch ( CASException casE ) {
             LOGGER.error( "Could not find JCas for annotation " + annotation.getCoveredText() );
          }

@@ -98,7 +98,17 @@ add LonerNegator2
 //  Fix the Subject type (patient, family member) by section type.
 add SubjectSectionFixer
 
+// Find biomarkers like ER, PR, HER2, IDH, TERT etc.
 add BiomarkerFinder
+
+// Find Tnm values
+add TnmFinderAe
+
+// Find Nuclear Grade
+add NuclearGradeFinder
+
+// Find Size Measurements
+add SizeFinderAe
 
 // Adjust Subjects for entities
 add SubjectAdjuster
@@ -125,10 +135,10 @@ add MelanomaDocEpisodeTagger
 
 // Table of relation "Source, Relation Name, Target, Confidence".
 // Can set TableType to TAB, CSV or BSV for simple delimited files.
-add DpheRelTableWriter SubDirectory=relations TableType=HTML
+add DpheRelTableWriter SubDirectory=relations TableType=BSV
 
 // Can set TableType to TAB, CSV or BSV for simple delimited files.
-add OmopMentionTableWriter SubDirectory=mentions TableType=HTML
+add OmopMentionTableWriter SubDirectory=mentions TableType=BSV
 
 // Clean the Uri cache after every document.
 add UriInfoCacheCleaner CleanAfterDoc=yes
