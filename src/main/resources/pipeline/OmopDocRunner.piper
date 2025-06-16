@@ -29,10 +29,10 @@ set Detailers=deepphe_2023_v1
 set deepphe_2023_v1_type=JDBC
 
 // Path to the dictionary database in the uber-jar for Dictionary (and Detailer) deepphe_2023_v1
-set deepphe_2023_v1_url=jdbc:hsqldb:file:hsqldb/DeepPhe_2023_v1/DeepPhe_2023_v1
+set deepphe_2023_v1_url=jdbc:hsqldb:file:/app/resources/dphe-db-resources/hsqldb/DeepPhe_2023_v1/DeepPhe_2023_v1
 
 // Path to the graph database in the uber-jar
-set GraphDb=neo4j/DeepPhe_2023_v1.db
+set GraphDb=/app/resources/dphe-db-resources/neo4j/DeepPhe_2023_v1.db
 
 // Connect to local ontology graph embedded db.
 add Neo4jEmbeddedConnectAe
