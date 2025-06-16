@@ -1,0 +1,49 @@
+services:
+  # DeepPhe OMOP Application
+  deepphe-omop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deepphe-omop-app
+    environment:
+      # JVM settings
+      - JAVA_OPTS=-Xms512m -Xmx2048m -XX:+UseG1GC
+      
+      # Application environment
+      - APP_ENV=docker
+    volumes:
+      # Mount input data directory
+      - ./data/input:/app/data/input:ro
+      
+      # Mount output data directory
+      - ./data/output:/app/data/output:rw
+      
+      # # Mount database resources (embedded databases)
+      # - ./src/main/resources/dphe-db-resources:/app/resources/dphe-db-resources:rw
+      
+      # # Mount pipeline configuration
+      # - ./src/main/resources/pipeline:/app/resources/pipeline:ro
+      
+      # Mount logs for debugging
+      - app_logs:/app/logs:rw
+      
+      # Optional: Mount custom config if you have one
+      # - ./config:/app/config:ro
+    
+    networks:
+      - app-network
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+        reservations:
+          memory: 1G
+    
+    restart: unless-stopped
+
+# Named volumes
+volumes:
+  app_logs:
+    driver: local
