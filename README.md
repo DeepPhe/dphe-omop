@@ -56,7 +56,7 @@ Place your clinical documents in the input director organized by patient ID:
 
 ```bash
 mkdir -p data/input
-# Copy your clinical text files to data/input/patient_id_1/docs
+# Copy your clinical text files to data/input/patient_id/*.txt
 ```
 
 ### 3. Run the Application
