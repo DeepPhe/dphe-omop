@@ -30,9 +30,6 @@ services:
       # Optional: Mount custom config if you have one
       # - ./config:/app/config:ro
     
-    networks:
-      - app-network
-    
     # Resource limits
     deploy:
       resources:
