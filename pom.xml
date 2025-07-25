@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.healthnlp</groupId>
     <artifactId>deepphe-omop</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <name>deepphe-omop</name>
     <description>Cancer Deep Phenotype Extraction (DeepPhe) OMOP module</description>
     <packaging>jar</packaging>
@@ -60,6 +60,12 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.eclipse.collections</pattern>
+                                    <shadedPattern>org.healthnlp.deepphe.omop.shaded.eclipse.collections</shadedPattern>
+                                </relocation>
+                            </relocations>
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
