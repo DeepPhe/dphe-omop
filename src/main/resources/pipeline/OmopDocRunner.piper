@@ -38,17 +38,15 @@ set GraphDb=/app/resources/dphe-db-resources/neo4j/DeepPhe_2023_v1.db
 add Neo4jEmbeddedConnectAe
 
 //  Discover sections.   TODO try CrSectionizer instead, which will trim any "REFERENCES:" from the report.
-add Sectionizer
+add Sectionizer sections_file=/app/resources/org/healthnlp/deepphe/sections/sections.txt
 
 //  Use the DeepPhe paragraph expressions for paragraph discovery.
-set PARAGRAPH_TYPES_PATH=org/healthnlp/deepphe/paragraph/ParagraphRegex.bsv
-//  Discover paragraphs.
-add ParagraphFinder
+add ParagraphFinder PARAGRAPH_TYPES_PATH=/app/resources/org/healthnlp/deepphe/paragraph/ParagraphRegex.bsv
 
 add WtfSectionFixer
 
 //  Detect sentences using a machine learning model.  Modified to use paragraphs when available.
-addLogged SentenceDetectorBIO classifierJarPath=/org/apache/ctakes/core/sentdetect/model.jar
+addLogged SentenceDetectorBIO classifierJarPath=/app/resources/org/apache/ctakes/core/sentdetect/model.jar TokenFilename=/app/resources/org/apache/ctakes/core/sentdetect/tokenCounts.txt
 
 // Correct for improperly split sentences that split on person titles.
 add MrsDrSentenceJoiner
@@ -62,7 +60,7 @@ add TokenizerAnnotatorPTB
 add ContextDependentTokenizerAnnotator
 
 //  Tag word part of speech.
-addDescription POSTagger
+add POSTagger posModelFile=/app/resources/org/apache/ctakes/postagger/models/mayo-pos.zip
 
 // new NER.  Use all parts of speech, set the minimum synonym span to 2.  Increase the span for fewer FPs.
 set UseAllPOS=yes
@@ -79,8 +77,8 @@ package org.apache.ctakes.assertion.medfacts.cleartk.windowed
 //  Assign such as negation and uncertainty using machine-learning models.
 // Add the cleartk attribute engines, logging for them as a block
 add StartFinishLogger LOGGER_NAME=CleartkAnalysisEngine LOGGER_TASK="Assigning Attributes" IS_START=true
-addDescription PolarityCleartkAnalysisEngineWindowed
-addDescription UncertaintyCleartkAnalysisEngineWindowed
+add PolarityCleartkAnalysisEngineWindowed classifierJarPath=/app/resources/org/apache/ctakes/assertion/models/polarity/sharpi2b2mipacqnegex/model.jar
+add UncertaintyCleartkAnalysisEngineWindowed classifierJarPath=/app/resources/org/apache/ctakes/assertion/models/uncertainty/model.jar
 
 //  Assign such as negation and uncertainty using context.
 set MaxRightScopeSize=12
@@ -123,8 +121,8 @@ add HistoryAdjuster
 add RelationFinder
 
 //  Tag the overall Episode for each document.
-add DocEpisodeTagger
-add MelanomaDocEpisodeTagger
+add DocEpisodeTagger classifierJarPath=/app/resources/org/healthnlp/deepphe/episode/breast/model.jar
+add MelanomaDocEpisodeTagger classifierJarPath=/app/resources/org/healthnlp/deepphe/episode/melanoma/model.jar
 
 // Sometimes the HtmlTextWriter and/or PrettyTextWriter make for quick doc output inspection.
 //add html.HtmlTextWriter SubDirectory=HTML
@@ -135,16 +133,16 @@ add MelanomaDocEpisodeTagger
 
 // Table of relation "Source, Relation Name, Target, Confidence".
 // Can set TableType to TAB, CSV or BSV for simple delimited files.
-add DpheRelTableWriter SubDirectory=relations TableType=BSV
+// add DpheRelTableWriter OutputDirectory=output SubDirectory=relations TableType=BSV
 
 // Can set TableType to TAB, CSV or BSV for simple delimited files.
-add OmopMentionTableWriter SubDirectory=mentions TableType=BSV
+// add OmopMentionTableWriter OutputDirectory=output SubDirectory=mentions TableType=BSV
 
 // Clean the Uri cache after every document.
-add UriInfoCacheCleaner CleanAfterDoc=yes
+// add UriInfoCacheCleaner CleanAfterDoc=yes
 
 //  Alert User that the pipeline is Finished.
-addLast FinishedLogger
+// addLast FinishedLogger
 
 // Force an exit, just in case a resource is hanging.
-addLast ExitForcer
+// addLast ExitForcer
