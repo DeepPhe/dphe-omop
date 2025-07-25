@@ -12,6 +12,7 @@ import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.healthnlp.deepphe.nlp.neo4j.Neo4jOntologyConceptUtil;
+import org.healthnlp.deepphe.omop.Mention;
 
 import java.text.DecimalFormat;
 import java.util.*;
@@ -41,9 +42,8 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
     * This header is made to fit both Element (Patient Concept) and Mention (Document Annotation) information.
     * The table header is constant, it is not based upon any values.
     */
-   static private final List<String> HEADER = Arrays.asList( " Semantic ", " URI ", " CUI ", " TUI ", " Pref. Text ",
-         " Negated ", " Uncertain ", " Historic ", " Confidence ", " Text ", " Window ");
-
+   static private final List<String> HEADER = Arrays.asList( " Semantic ", " URI ", " CUI ", " TUI ", " PrefText ",
+         " Negated ", " Uncertain ", " Historic ", " Confidence ", " Term ", " Window ");
 
    /**
     * {@inheritDoc}
@@ -62,7 +62,7 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
     * {@inheritDoc}
     */
    @Override
-   protected List<List<String>> createDataRows( final JCas jCas ) {
+   public List<List<String>> createDataRows( final JCas jCas ) {
       final Collection<IdentifiedAnnotation> mentions = JCasUtil.select( jCas, IdentifiedAnnotation.class );
       return mentions.stream()
               .map( MentionInfoHolder::new )
@@ -71,6 +71,14 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
               .collect( Collectors.toList() );
    }
 
+   public List<Mention> createDataFields( final JCas jCas ) {
+      final Collection<IdentifiedAnnotation> mentions = JCasUtil.select( jCas, IdentifiedAnnotation.class );
+      return mentions.stream()
+                     .map( MentionInfoHolder::new )
+                     .sorted( MENTION_COMPARATOR )
+                     .map( MentionInfoHolder::toMention )
+                     .collect( Collectors.toList() );
+   }
 
    private static class MentionInfoHolder {
       static private final int WINDOW_EDGE = 40;
@@ -123,6 +131,21 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
          return Arrays.asList( _dpheGroup.getName(), _uri, _cui, _tui.name(), _prefText,
                _negated, _uncertain, _historic,
                _confidence, _text, _textWindow );
+      }
+      private Mention toMention() {
+         return new Mention(
+                 _dpheGroup.getName(),
+                 _uri,
+                 _cui,
+                 _tui.name(),
+                 _prefText,
+                 _negated,
+                 _uncertain,
+                 _historic,
+                 _confidence,
+                 _text,
+                 _textWindow
+         );
       }
    }
 
