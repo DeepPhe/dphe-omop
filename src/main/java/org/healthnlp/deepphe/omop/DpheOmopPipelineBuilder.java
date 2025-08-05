@@ -6,6 +6,9 @@ import org.apache.ctakes.core.pipeline.PipelineBuilder;
 import org.apache.ctakes.core.pipeline.PiperFileReader;
 import org.apache.ctakes.core.util.doc.SourceMetadataUtil;
 import org.apache.uima.UIMAException;
+import org.apache.uima.UIMAFramework;
+import org.apache.uima.analysis_engine.AnalysisEngine;
+import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -33,17 +36,35 @@ public class DpheOmopPipelineBuilder {
      * @throws UIMAException
      */
     private final PipelineBuilder builder;
-    private boolean isClosed = false;
+    private AnalysisEngine analysisEngine;
+    private JCas jcas;
 
     public DpheOmopPipelineBuilder(String configFile) throws UIMAException {
         final PiperFileReader reader = new PiperFileReader(configFile);
         this.builder = reader.getBuilder();
     }
 
-    public List<Mention> run(String text) throws UIMAException, IOException {
-        JCas jcas = JCasFactory.createJCas();
+    public void initialize() throws UIMAException, IOException {
+        if (this.analysisEngine != null) {
+            return;
+        }
+        System.out.println("Initializing DpheOmopPipelineBuilder: Creating live AnalysisEngine and JCas...");
+        AnalysisEngineDescription aed = builder.getAnalysisEngineDesc();
+        this.analysisEngine = UIMAFramework.produceAnalysisEngine(aed);
+        this.jcas = JCasFactory.createJCas();
+        System.out.println("Initialization complete.");
+    }
+
+    public List<Mention> run(String text) throws UIMAException {
+        if (this.analysisEngine == null || this.jcas == null) {
+            throw new IllegalStateException("The builder has not been initialized. Please call initialize() first.");
+        }
+
+        jcas.reset();
         jcas.setDocumentText(text);
-        builder.run(jcas);
+
+        analysisEngine.process(jcas);
+
         OmopMentionTableWriter writer = new OmopMentionTableWriter();
         List<Mention> rows = writer.createDataFields(jcas);
         String patientId = SourceMetadataUtil.getPatientIdentifier( jcas );
@@ -54,18 +75,14 @@ public class DpheOmopPipelineBuilder {
     }
 
     public void close() {
-        if (!isClosed) {
+        if (this.analysisEngine != null) {
+            System.out.println("Closing DpheOmopPipelineBuilder: Destroying AnalysisEngine...");
             try {
-                UriInfoCache.getInstance().clear();
-
-                if (builder != null) {
-                    builder.clear();
-                }
-
+                this.analysisEngine.destroy();
             } catch (Exception e) {
-                System.err.println("Error during cleanup: " + e.getMessage());
+                System.err.println("Error during AnalysisEngine destruction: " + e.getMessage());
             } finally {
-                isClosed = true;
+                this.analysisEngine = null;
             }
         }
     }
@@ -93,29 +110,32 @@ public class DpheOmopPipelineBuilder {
             throw e;
         }
 
+        Path tmp_resources_path = Files.createTempDirectory("resources");
+        Path resourcesPath = Paths.get(resources_path);
+
+        Files.walk(resourcesPath)
+            .forEach(source -> {
+                try {
+                    Files.copy(source,
+                      tmp_resources_path.resolve(resourcesPath.relativize(source)),
+                      StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+        String tmp_resources_dir = tmp_resources_path.toString();
+        String configFile = resources_path + File.separator + "pipeline" + File.separator + "OmopDocRunner.piper";
+        Path configPath = Paths.get(configFile);
+
+        Charset charset = StandardCharsets.UTF_8;
+        String content = new String(Files.readAllBytes(configPath), charset);
+        content = content.replaceAll("/app/resources", tmp_resources_dir);
+        Files.write(configPath, content.getBytes(charset));
+
+        DpheOmopPipelineBuilder pipeline = new DpheOmopPipelineBuilder(configFile);
+        pipeline.initialize();
         try {
-            Path tmp_resources_path = Files.createTempDirectory("resources");
-            Path resourcesPath = Paths.get(resources_path);
-
-            Files.walk(resourcesPath)
-                    .forEach(source -> {
-                        try {
-                            Files.copy(source, tmp_resources_path.resolve(resourcesPath.relativize(source)), StandardCopyOption.REPLACE_EXISTING);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-
-            String tmp_resources_dir = tmp_resources_path.toString();
-            String configFile = resources_path + File.separator + "pipeline" + File.separator + "OmopDocRunner.piper";
-            Path configPath = Paths.get(configFile);
-
-            Charset charset = StandardCharsets.UTF_8;
-            String content = new String(Files.readAllBytes(configPath), charset);
-            content = content.replaceAll("/app/resources", tmp_resources_dir);
-            Files.write(configPath, content.getBytes(charset));
-
-            DpheOmopPipelineBuilder pipeline = new DpheOmopPipelineBuilder(configFile);
             String text = "===================================================================\n" + //
                 "Report ID.....................1,doc1\n" + //
                 "Patient ID....................pt123123123\n" + //
@@ -143,6 +163,8 @@ public class DpheOmopPipelineBuilder {
         } catch (ResourceInitializationException e) {
             System.err.println("Failed to create pipeline: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            pipeline.close();
         }
     }
 }

@@ -139,10 +139,13 @@ add MelanomaDocEpisodeTagger classifierJarPath=/app/resources/org/healthnlp/deep
 // add OmopMentionTableWriter OutputDirectory=output SubDirectory=mentions TableType=BSV
 
 // Clean the Uri cache after every document.
-// add UriInfoCacheCleaner CleanAfterDoc=yes
+add UriInfoCacheCleaner CleanAfterDoc=yes
+
+// Shutdown Neo4j
+addLast Neo4jServerShutdownAe
 
 //  Alert User that the pipeline is Finished.
-// addLast FinishedLogger
+addLast FinishedLogger
 
 // Force an exit, just in case a resource is hanging.
-// addLast ExitForcer
+addLast ExitForcer
