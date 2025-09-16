@@ -42,8 +42,10 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
     * This header is made to fit both Element (Patient Concept) and Mention (Document Annotation) information.
     * The table header is constant, it is not based upon any values.
     */
-   static private final List<String> HEADER = Arrays.asList( " Semantic ", " URI ", " CUI ", " TUI ", " PrefText ",
-         " Negated ", " Uncertain ", " Historic ", " Confidence ", " Term ", " Window ");
+   static private final List<String> HEADER = Arrays.asList( " Semantic ", " URI ", " CUI ", " TUI ",
+     " StartOffset ", " EndOffset ", " PrefText ",
+     " Negated ", " Uncertain ", " Historic ", " Generic ", " Conditional ",
+     " Confidence ", " Term ", " Window ");
 
    /**
     * {@inheritDoc}
@@ -71,42 +73,41 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
               .collect( Collectors.toList() );
    }
 
-   public List<Mention> createDataFields( final JCas jCas ) {
-      final Collection<IdentifiedAnnotation> mentions = JCasUtil.select( jCas, IdentifiedAnnotation.class );
-      return mentions.stream()
-                     .map( MentionInfoHolder::new )
-                     .sorted( MENTION_COMPARATOR )
-                     .map( MentionInfoHolder::toMention )
-                     .collect( Collectors.toList() );
-   }
-
-   private static class MentionInfoHolder {
+   protected static class MentionInfoHolder {
       static private final int WINDOW_EDGE = 40;
       private final DpheGroup _dpheGroup;
       private final String _uri;
       private final String _cui;
       private final SemanticTui _tui;
+      private final String _start_offset;
+      private final String _end_offset;
       private final String _prefText;
       private final String _negated;
       private final String _uncertain;
       private final String _historic;
-      private final String _text;
-      private String _textWindow = "";
+      private final String _generic;
+      private final String _conditional;
+      private final String _term;
+      private String _termWindow = "";
       private final String _confidence;
-      private MentionInfoHolder( final IdentifiedAnnotation annotation ) {
+      protected MentionInfoHolder( final IdentifiedAnnotation annotation ) {
          _uri = Neo4jOntologyConceptUtil.getUris( annotation ).stream().findFirst().orElse( "" );
          _cui = IdentifiedAnnotationUtil.getCuis( annotation ).stream().findFirst().orElse( "" );
          _dpheGroup = DpheGroupAccessor.getInstance()
                                        .getBestGroup( DpheGroupAccessor.getInstance()
                                                                        .getAnnotationGroups( annotation ) );
          _tui = SemanticTui.getTuis( annotation ).stream().findFirst().orElse( SemanticTui.UNKNOWN );
+         _start_offset = String.valueOf(annotation.getBegin());
+         _end_offset = String.valueOf(annotation.getEnd());
          _negated =  IdentifiedAnnotationUtil.isNegated( annotation ) ? "True" : "False";
          _uncertain = IdentifiedAnnotationUtil.isUncertain( annotation ) ? "True" : "False";
          _historic = IdentifiedAnnotationUtil.isHistoric( annotation ) ? "True" : "False";
+         _generic = IdentifiedAnnotationUtil.isGeneric( annotation ) ? "True" : "False";
+         _conditional = IdentifiedAnnotationUtil.isConditional( annotation ) ? "True" : "False";
          // Replace newlines and carriage returns with spaces to keep the CSV rows clean
          _prefText = IdentifiedAnnotationUtil.getPreferredTexts( annotation ).stream().findFirst().orElse( "" )
            .replace('\n', ' ').replace('\r', ' ').replace('|', ' ');
-        _text = annotation.getCoveredText().replace('\n', ' ').replace('\r', ' ')
+        _term = annotation.getCoveredText().replace('\n', ' ').replace('\r', ' ')
           .replace('|', ' ');
          try {
             //////////////////////////////////////////////////////////////
@@ -116,7 +117,7 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
 //                final JCas annotationCas = annotation.getCAS().getJCas();
             final JCas annotationCas = annotation.getView().getJCas();
             final String docText = annotationCas.getDocumentText();
-            _textWindow = docText
+            _termWindow = docText
               .substring(
                   Math.max( 0, annotation.getBegin()-WINDOW_EDGE ),
                   Math.min( docText.length(), annotation.getEnd() + WINDOW_EDGE ) )
@@ -127,24 +128,29 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
          }
          _confidence = DECIMAL_FORMATTER.format( annotation.getConfidence() );
       }
-      private List<String> getRow() {
-         return Arrays.asList( _dpheGroup.getName(), _uri, _cui, _tui.name(), _prefText,
-               _negated, _uncertain, _historic,
-               _confidence, _text, _textWindow );
+      protected List<String> getRow() {
+         return Arrays.asList( _dpheGroup.getName(),
+            _uri, _cui, _tui.name(), _prefText,
+            _negated, _uncertain, _historic,
+            _confidence, _term, _termWindow );
       }
-      private Mention toMention() {
+      protected Mention toMention() {
          return new Mention(
                  _dpheGroup.getName(),
                  _uri,
                  _cui,
                  _tui.name(),
+                 _start_offset,
+                 _end_offset,
                  _prefText,
                  _negated,
                  _uncertain,
                  _historic,
+                 _generic,
+                 _conditional,
                  _confidence,
-                 _text,
-                 _textWindow
+                 _term,
+                 _termWindow
          );
       }
    }
@@ -152,7 +158,7 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
    /**
     * Compares mentions by group, uri, and confidence.  Used to sort the element mention rows.
     */
-   static private final Comparator<MentionInfoHolder> MENTION_COMPARATOR = ( m1, m2 ) -> {
+   protected static final Comparator<MentionInfoHolder> MENTION_COMPARATOR = ( m1, m2 ) -> {
       final int group = String.CASE_INSENSITIVE_ORDER.compare( m1._dpheGroup.getName(), m2._dpheGroup.getName() );
       if ( group != 0 ) {
          return group;
