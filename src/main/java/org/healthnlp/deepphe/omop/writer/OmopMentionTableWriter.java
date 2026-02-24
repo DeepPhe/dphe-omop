@@ -88,7 +88,7 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
       private final DpheGroup _dpheGroup;
       private final String _uri;
       private final String _cui;
-      private final SemanticTui _tui;
+      private final List<String> _tui;
       private final String _start_offset;
       private final String _end_offset;
       private final String _prefText;
@@ -106,7 +106,7 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
          _dpheGroup = DpheGroupAccessor.getInstance()
            .getBestGroup( DpheGroupAccessor.getInstance()
              .getAnnotationGroups( annotation ) );
-         _tui = SemanticTui.getTuis( annotation ).stream().findFirst().orElse( SemanticTui.UNKNOWN );
+         _tui = SemanticTui.getTuis( annotation ).stream().map( SemanticTui::name ).collect( Collectors.toList() );
          _start_offset = String.valueOf(annotation.getBegin());
          _end_offset = String.valueOf(annotation.getEnd());
          _negated =  IdentifiedAnnotationUtil.isNegated( annotation ) ? "True" : "False";
@@ -140,7 +140,7 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
       }
       protected List<String> getRow() {
          return Arrays.asList( _dpheGroup.getName(),
-           _uri, _cui, _tui.name(), _prefText,
+           _uri, _cui, String.join( ",", _tui ), _prefText,
            _negated, _uncertain, _historic,
            _confidence, _term, _termWindow );
       }
@@ -149,7 +149,7 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
            _dpheGroup.getName(),
            _uri,
            _cui,
-           _tui.name(),
+           _tui,
            _start_offset,
            _end_offset,
            _prefText,

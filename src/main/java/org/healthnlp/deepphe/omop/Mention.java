@@ -1,10 +1,15 @@
 package org.healthnlp.deepphe.omop;
 
+import com.google.gson.Gson;
+
+import java.util.Collections;
+import java.util.List;
+
 public class Mention {
   public final String semantic;
   public final String uri;
   public final String cui;
-  public final String tui;
+  public final List<String> tui;
   public final String start_offset;
   public final String end_offset;
   public final String prefText;
@@ -17,7 +22,7 @@ public class Mention {
   public final String term;
   public final String window;
 
-  public Mention(String semantic, String uri, String cui, String tui,
+  public Mention(String semantic, String uri, String cui, List<String> tui,
                  String start_offset, String end_offset, String prefText,
                  String negated, String uncertain, String historic,
                  String generic, String conditional,
@@ -39,8 +44,17 @@ public class Mention {
     this.window = window;
   }
 
+  private static final Gson GSON = new Gson();
+
+  /**
+   * Returns the TUI list as a JSON array string, e.g., ["T047","T191"]
+   */
+  public String getTuiAsJsonArray() {
+    return GSON.toJson(tui == null ? Collections.emptyList() : tui);
+  }
+
   public String toString() {
-    return String.join( ", ", semantic, uri, cui, tui,
+    return String.join( ", ", semantic, uri, cui, getTuiAsJsonArray(),
       start_offset, end_offset, prefText, negated,
       uncertain, historic, generic, conditional,
       confidence, term, window );
