@@ -73,6 +73,16 @@ public class OmopMentionTableWriter extends AbstractTableFileWriter {
         .collect( Collectors.toList() );
    }
 
+   // Add mention holder
+   public List<Mention> createDataFields( final JCas jCas ) {
+      final Collection<IdentifiedAnnotation> mentions = JCasUtil.select( jCas, IdentifiedAnnotation.class );
+      return mentions.stream()
+        .map( MentionInfoHolder::new )
+        .sorted( MENTION_COMPARATOR )
+        .map( MentionInfoHolder::toMention )
+        .collect( Collectors.toList() );
+   }
+
    protected static class MentionInfoHolder {
       static private final int WINDOW_EDGE = 40;
       private final DpheGroup _dpheGroup;
